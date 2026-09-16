@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header>
+        <h1>🛍️ My E-Commerce Store</h1>
+
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="cart.html">Cart 🛒</a>
+            <a href="orders.html">My Orders</a>
+            <a href="admin.html">Admin</a>
+            <a href="login.html">Login</a>
+            
+        </nav>
+    </header>
+
+    <main>
+        <h2>Admin Panel: Add Product</h2>
+
+        <form id="product-form">
+            <input
+                type="text"
+                id="name"
+                placeholder="Product name"
+                required
+            >
+
+            <br><br>
+
+            <input
+                type="number"
+                id="price"
+                placeholder="Price"
+                required
+            >
+
+            <br><br>
+
+            <textarea
+                id="description"
+                placeholder="Product description"
+            ></textarea>
+
+            <br><br>
+
+            <input
+                type="text"
+                id="image"
+                placeholder="Image path, for example images/product.jpg"
+            >
+
+            <br><br>
+
+            <button type="submit">Add Product</button>
+        </form>
+
+        <p id="message"></p>
+        <h2>Current Products</h2>
+
+<div id="admin-product-list"></div>
+    </main>
+    <script>
+    const token = localStorage.getItem("token");
+    const productForm = document.getElementById("product-form");
+    const message = document.getElementById("message");
+    const adminProductList = document.getElementById("admin-product-list");
+
+    function loadProducts() {
+        fetch("/api/products")
+            .then(response => response.json())
+            .then(products => {
+                adminProductList.innerHTML = "";
+
+                products.forEach(product => {
+                    adminProductList.innerHTML += `
+                        <div class="product">
+                            <h3>${product.name}</h3>
+                            <p>₹${product.price}</p>
+                            <button onclick="deleteProduct(${product.id})">
+                                Delete Product
+                            </button>
+                        </div>
+                    `;
+                });
+            });
+    }
+
+    function deleteProduct(productId) {
+        const shouldDelete = confirm("Delete this product?");
+
+        if (!shouldDelete) {
+            return;
+        }
+
+        fetch(`/api/admin/products/${productId}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                message.textContent = data.message || data.error;
+
+                if (data.message) {
+                    loadProducts();
+                }
+            })
+            .catch(() => {
+                message.textContent = "Could not delete the product.";
+            });
+    }
+
+    productForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        if (!token) {
+            message.textContent = "Please log in as an admin first.";
+            return;
+        }
+
+        const name = document.getElementById("name").value;
+        const price = document.getElementById("price").value;
+        const description = document.getElementById("description").value;
+        const image = document.getElementById("image").value;
+
+        fetch("/api/admin/products", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                name: name,
+                price: price,
+                description: description,
+                image: image
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                message.textContent = data.message || data.error;
+
+                if (data.productId) {
+                    productForm.reset();
+                    loadProducts();
+                }
+            })
+            .catch(() => {
+                message.textContent = "Something went wrong. Please try again.";
+            });
+    });
+
+    loadProducts();
+</script>
+        
+
+</body>
+</html>

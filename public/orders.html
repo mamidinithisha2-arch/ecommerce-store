@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header>
+        <h1>🛍️ My E-Commerce Store</h1>
+
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="cart.html">Cart 🛒</a>
+            <a href="orders.html">My Orders</a>
+            <a href="login.html">Login</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2>My Orders</h2>
+
+        <div id="order-list"></div>
+    </main>
+    <script>
+    const token = localStorage.getItem("token");
+    const orderList = document.getElementById("order-list");
+
+    if (!token) {
+        orderList.innerHTML = "<p>Please log in to view your orders.</p>";
+    } else {
+        fetch("/api/orders", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        })
+            .then(response => response.json())
+            .then(orders => {
+                if (orders.length === 0) {
+                    orderList.innerHTML = "<p>You have not placed any orders yet.</p>";
+                    return;
+                }
+
+                orderList.innerHTML = "";
+
+                orders.forEach(order => {
+                    orderList.innerHTML += `
+                        <div class="product">
+                            <h3>Order #${order.order_id}</h3>
+                            <p>Product: ${order.product_name}</p>
+                            <p>Quantity: ${order.quantity}</p>
+                            <p>Order total: ₹${order.total}</p>
+                        </div>
+                    `;
+                });
+            })
+            .catch(() => {
+                orderList.innerHTML = "<p>Could not load your orders.</p>";
+            });
+    }
+</script>
+</body>
+</html>

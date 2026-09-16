@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <header>
+        <h1>🛍️ My E-Commerce Store</h1>
+
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="cart.html">Cart 🛒</a>
+            <a href="login.html">Login</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2>Login</h2>
+
+        <form id="login-form">
+            <input
+                type="email"
+                id="email"
+                placeholder="Email address"
+                required
+            >
+
+            <br><br>
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                required
+            >
+
+            <br><br>
+
+            <button type="submit">Login</button>
+        </form>
+
+        <p id="message"></p>
+
+        <p>
+            New customer?
+            <a href="register.html">Create an account</a>
+        </p>
+    </main>
+    <script>
+    const loginForm = document.getElementById("login-form");
+    const message = document.getElementById("message");
+
+    loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        fetch("/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.user && data.token) {
+    localStorage.setItem("currentUser", JSON.stringify(data.user));
+    localStorage.setItem("token", data.token);
+}
+
+                message.textContent = data.message || data.error;
+            })
+            .catch(() => {
+                message.textContent = "Something went wrong. Please try again.";
+            });
+    });
+</script>
+</body>
+</html>

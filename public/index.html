@@ -18,6 +18,9 @@
             <a href="index.html">Home</a>
             <a href="cart.html">Cart 🛒</a>
             <a href="login.html">Login</a>
+            <a href="orders.html">My Orders</a>
+            <a href="admin.html">Admin</a>
+            <button onclick="logout()">Logout</button>
         </nav>
     </header>
 
@@ -25,41 +28,75 @@
 
         <h2>Our Products</h2>
 
-        <div id="product-list">
-
-            <div class="product">
-                <img src="https://via.placeholder.com/200" alt="Product">
-
-                <h3>Smart Watch</h3>
-
-                <p>₹1,999</p>
-
-                <button>Add to Cart</button>
-            </div>
-
-            <div class="product">
-                <img src="https://via.placeholder.com/200" alt="Product">
-
-                <h3>Wireless Headphones</h3>
-
-                <p>₹1,499</p>
-
-                <button>Add to Cart</button>
-            </div>
-
-            <div class="product">
-                <img src="https://via.placeholder.com/200" alt="Product">
-
-                <h3>Running Shoes</h3>
-
-                <p>₹2,499</p>
-
-                <button>Add to Cart</button>
-            </div>
-
-        </div>
+        <div id="product-list"></div>
 
     </main>
+
+
+    <script>
+
+        fetch("/api/products")
+
+            .then(response => response.json())
+
+            .then(products => {
+
+                const productList =
+                    document.getElementById("product-list");
+
+                products.forEach(product => {
+
+                    productList.innerHTML += `
+
+                        <div class="product">
+
+                            <img 
+                                src="${product.image}" 
+                                alt="${product.name}"
+                            >
+
+                            <h3>${product.name}</h3>
+
+                            <p>₹${product.price}</p>
+
+                            <p>${product.description}</p>
+
+                            <button onclick="addToCart(${product.id})">
+                                Add to Cart
+                            </button>
+
+                        </div>
+
+                    `;
+
+                });
+
+            })
+
+            .catch(error => {
+
+                console.error("Error:", error);
+
+            });
+
+
+        function addToCart(productId) {
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    cart.push(productId);
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    alert("Product added to cart!");
+}function logout() {
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("token");
+
+    alert("You have been logged out.");
+    window.location.href = "index.html";
+}
+
+    </script>
 
 </body>
 </html>
