@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Your Cart</title>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
     <header>
+
         <h1>🛒 Your Cart</h1>
 
         <nav>
@@ -17,116 +21,283 @@
             <a href="cart.html">Cart 🛒</a>
             <a href="login.html">Login</a>
         </nav>
+
     </header>
 
+
     <main>
+
         <h2>Your Selected Products</h2>
+
         <div id="cart-items"></div>
-        
-        <button onclick="clearCart()">Clear Cart</button>
-        <button onclick="placeOrder()">Place Order</button>
+
+        <h2 id="cart-total"></h2>
+
+        <button onclick="clearCart()">
+            Clear Cart
+        </button>
+
+        <button onclick="placeOrder()">
+            Place Order
+        </button>
+
     </main>
+
+
     <script>
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-    const cartItems = document.getElementById("cart-items");
-    const cartTotal = document.getElementById("cart-total");
+        function displayCart() {
 
-    fetch("/api/products")
-        .then(response => response.json())
-        .then(products => {
-            cartItems.innerHTML = "";
+            const cart =
+                JSON.parse(localStorage.getItem("cart")) || [];
+
+            const cartItems =
+                document.getElementById("cart-items");
+
+            const cartTotal =
+                document.getElementById("cart-total");
+
 
             if (cart.length === 0) {
-                cartItems.innerHTML = "<p>Your cart is empty.</p>";
-                cartTotal.innerHTML = "";
+
+                cartItems.innerHTML =
+                    "<p>Your cart is empty.</p>";
+
+                cartTotal.textContent = "";
+
                 return;
             }
 
+
             let total = 0;
-            const uniqueProductIds = [...new Set(cart)];
 
-            uniqueProductIds.forEach(productId => {
-                const product = products.find(product => product.id == productId);
-                const quantity = cart.filter(id => id == productId).length;
+            cartItems.innerHTML = "";
 
-                if (product) {
-                    total += product.price * quantity;
 
-                    cartItems.innerHTML += `
-                        <div class="product">
-                            <h3>${product.name}</h3>
-                            <p>Price: ₹${product.price}</p>
-                            <p>Quantity: ${quantity}</p>
-                            <button onclick="removeOne(${product.id})">Remove One</button>
-                            <button onclick="removeAll(${product.id})">Remove All</button>
-                        </div>
-                    `;
-                }
+            cart.forEach((product, index) => {
+
+                total += product.price * product.quantity;
+
+
+                cartItems.innerHTML += `
+
+                    <div class="product">
+
+                        <img
+                            src="${product.image}"
+                            alt="${product.name}"
+                        >
+
+                        <h3>${product.name}</h3>
+
+                        <p>Price: ₹${product.price}</p>
+
+                        <p>
+                            Quantity: ${product.quantity}
+                        </p>
+
+                        <button onclick="increaseQuantity(${index})">
+                            +
+                        </button>
+
+                        <button onclick="decreaseQuantity(${index})">
+                            -
+                        </button>
+
+                        <button onclick="removeProduct(${index})">
+                            Remove
+                        </button>
+
+                    </div>
+
+                `;
+
             });
 
-            cartTotal.innerHTML = `Total: ₹${total}`;
-        });
 
-    function removeAll(productId) {
-        const updatedCart = cart.filter(id => id != productId);
+            cartTotal.textContent =
+                `Total: ₹${total}`;
 
-        localStorage.setItem("cart", JSON.stringify(updatedCart));
-        window.location.reload();
-    }
-
-    function removeOne(productId) {
-        const productIndex = cart.indexOf(productId);
-
-        if (productIndex !== -1) {
-            cart.splice(productIndex, 1);
-            localStorage.setItem("cart", JSON.stringify(cart));
-            window.location.reload();
-        }
-    }
-
-    function clearCart() {
-        localStorage.removeItem("cart");
-        window.location.reload();
-    }
-
-    function placeOrder() {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            alert("Please log in before placing an order.");
-            window.location.href = "login.html";
-            return;
         }
 
-        fetch("/api/orders", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                cart: cart
+
+        function increaseQuantity(index) {
+
+            let cart =
+                JSON.parse(localStorage.getItem("cart")) || [];
+
+            cart[index].quantity += 1;
+
+            localStorage.setItem(
+                "cart",
+                JSON.stringify(cart)
+            );
+
+            displayCart();
+
+        }
+
+
+        function decreaseQuantity(index) {
+
+            let cart =
+                JSON.parse(localStorage.getItem("cart")) || [];
+
+            if (cart[index].quantity > 1) {
+
+                cart[index].quantity -= 1;
+
+            } else {
+
+                cart.splice(index, 1);
+
+            }
+
+            localStorage.setItem(
+                "cart",
+                JSON.stringify(cart)
+            );
+
+            displayCart();
+
+        }
+
+
+        function removeProduct(index) {
+
+            let cart =
+                JSON.parse(localStorage.getItem("cart")) || [];
+
+            cart.splice(index, 1);
+
+            localStorage.setItem(
+                "cart",
+                JSON.stringify(cart)
+            );
+
+            displayCart();
+
+        }
+
+
+        function clearCart() {
+
+            localStorage.removeItem("cart");
+
+            displayCart();
+
+        }
+
+
+        function placeOrder() {
+
+            const cart =
+                JSON.parse(localStorage.getItem("cart")) || [];
+
+
+            if (cart.length === 0) {
+
+                alert("Your cart is empty.");
+
+                return;
+
+            }
+
+
+            const token =
+                localStorage.getItem("token");
+
+
+            if (!token) {
+
+                alert("Please log in before placing an order.");
+
+                window.location.href = "login.html";
+
+                return;
+
+            }
+
+
+            // Convert cart objects into product IDs
+            const productIds = [];
+
+            cart.forEach(product => {
+
+                for (
+                    let i = 0;
+                    i < product.quantity;
+                    i++
+                ) {
+                    productIds.push(product.id);
+                }
+
+            });
+
+
+            fetch("/api/orders", {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type": "application/json",
+
+                    "Authorization":
+                        `Bearer ${token}`
+
+                },
+
+                body: JSON.stringify({
+
+                    cart: productIds
+
+                })
+
             })
-        })
+
             .then(response => response.json())
+
             .then(data => {
+
                 if (data.orderId) {
-                    alert(`Order saved successfully! Order number: ${data.orderId}`);
+
+                    alert(
+                        `Order saved successfully! Order number: ${data.orderId}`
+                    );
+
                     localStorage.removeItem("cart");
-                    window.location.reload();
+
+                    displayCart();
+
                 } else {
-                    alert(data.error || "Could not place order.");
+
+                    alert(
+                        data.error || "Could not place order."
+                    );
+
                 }
+
             })
-            .catch(() => {
-                alert("Something went wrong. Please try again.");
+
+            .catch(error => {
+
+                console.error(error);
+
+                alert(
+                    "Something went wrong. Please try again."
+                );
+
             });
-    }
-</script>
 
-        
+        }
 
+
+        // Display cart when page opens
+        displayCart();
+
+    </script>
 
 </body>
+
 </html>
